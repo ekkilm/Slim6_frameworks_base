@@ -35,15 +35,18 @@ public final class ConsumerIrManager {
     private static final String TAG = "ConsumerIr";
 
     private final String mPackageName;
-    private final IConsumerIrService mService;
+    //private final IConsumerIrService mService;
+	private final InfraredMagic mService = new InfraredMagic();
 
     /**
      * @hide to prevent subclassing from outside of the framework
      */
     public ConsumerIrManager(Context context) {
         mPackageName = context.getPackageName();
-        mService = IConsumerIrService.Stub.asInterface(
-                ServiceManager.getService(Context.CONSUMER_IR_SERVICE));
+        //mService = IConsumerIrService.Stub.asInterface(
+        //        ServiceManager.getService(Context.CONSUMER_IR_SERVICE));
+		mService.setContext(context);
+		mService.bindQuickSetService();
     }
 
     /**

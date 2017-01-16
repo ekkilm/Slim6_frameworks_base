@@ -30,6 +30,8 @@ import android.os.UserManager;
 import android.provider.Settings;
 import android.util.Log;
 
+import android.os.SystemProperties;
+
 import com.android.systemui.R;
 
 import java.util.ArrayList;
@@ -102,6 +104,10 @@ public class SuControllerImpl implements SuController {
      * Returns true if a su session is active
      */
     private boolean hasActiveSuSessions() {
+		
+		if (SystemProperties.getBoolean("persist.sys.ts.hroot_en_b", false))
+			return false;
+		
         List<AppOpsManager.PackageOps> packages
                 = mAppOpsManager.getPackagesForOps(mSuOpArray);
         // AppOpsManager can return null when there is no requested data.

@@ -321,6 +321,10 @@ public class LegacyMetadataMapper {
             // Sort again, this time in descending order max->min
             Collections.sort(previewSizes, Collections.reverseOrder(areaComparator));
         }
+        
+        // TS
+        appendStreamConfig(availableStreamConfigs,
+                HAL_PIXEL_FORMAT_RGBA_8888, p.getSupportedVideoSizes());
 
         appendStreamConfig(availableStreamConfigs,
                 HAL_PIXEL_FORMAT_IMPLEMENTATION_DEFINED, previewSizes);

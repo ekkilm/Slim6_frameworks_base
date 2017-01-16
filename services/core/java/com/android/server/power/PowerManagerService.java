@@ -82,6 +82,8 @@ import libcore.util.Objects;
 
 import org.slim.provider.SlimSettings;
 
+import android.app.admin.DevicePolicyManager;
+
 import static android.os.PowerManagerInternal.POWER_HINT_INTERACTION;
 import static android.os.PowerManagerInternal.WAKEFULNESS_ASLEEP;
 import static android.os.PowerManagerInternal.WAKEFULNESS_AWAKE;
@@ -3248,7 +3250,11 @@ public final class PowerManagerService extends SystemService
 
     private void cleanupProximityLocked() {
         if (mProximityWakeLock.isHeld()) {
-            mProximityWakeLock.release();
+            try {
+	            mProximityWakeLock.release();
+			} catch (Exception e) {
+				Slog.w(TAG, e);
+			}
         }
         if (mProximityListener != null) {
             mSensorManager.unregisterListener(mProximityListener);
@@ -3457,6 +3463,11 @@ public final class PowerManagerService extends SystemService
 
             mContext.enforceCallingOrSelfPermission(
                     android.Manifest.permission.DEVICE_POWER, null);
+                    
+            if ("android.policy:FINGERPRINT".equals(reason)) {
+				// No need to check, KeyguardUpdateMonitor did it already
+				checkProximity = false;
+			}
 
             final int uid = Binder.getCallingUid();
             Runnable r = new Runnable() {
@@ -3538,7 +3549,8 @@ public final class PowerManagerService extends SystemService
 
         @Override // Binder call
         public void wakeUp(long eventTime, String reason, String opPackageName) {
-            wakeUp(eventTime, reason, opPackageName, false);
+            //wakeUp(eventTime, reason, opPackageName, false);
+            wakeUp(eventTime, reason, opPackageName, true);
         }
 
         @Override // Binder call

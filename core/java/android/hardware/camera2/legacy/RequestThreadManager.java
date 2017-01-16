@@ -82,7 +82,7 @@ public class RequestThreadManager {
     private static final int PREVIEW_FRAME_TIMEOUT = 1000; // ms
     private static final int JPEG_FRAME_TIMEOUT = 4000; // ms (same as CTS for API2)
     private static final int HDR_TIMEOUT = 20000; //ms
-    private static final int REQUEST_COMPLETE_TIMEOUT = JPEG_FRAME_TIMEOUT;
+    private static final int REQUEST_COMPLETE_TIMEOUT = 100;//JPEG_FRAME_TIMEOUT;
 
     private static final float ASPECT_RATIO_TOLERANCE = 0.01f;
     private boolean mPreviewRunning = false;
@@ -329,7 +329,7 @@ public class RequestThreadManager {
         startPreview();
     }
 
-    private void configureOutputs(Collection<Pair<Surface, Size>> outputs) {
+    synchronized private void configureOutputs(Collection<Pair<Surface, Size>> outputs) {
         if (DEBUG) {
             String outputsStr = outputs == null ? "null" : (outputs.size() + " surfaces");
             Log.d(TAG, "configureOutputs with " + outputsStr);
@@ -349,16 +349,16 @@ public class RequestThreadManager {
          * using a different one; this also reduces the likelihood of getting into a deadlock
          * when disconnecting from the old previous texture at a later time.
          */
-        try {
-            mCamera.setPreviewTexture(/*surfaceTexture*/null);
-        } catch (IOException e) {
+        //try {
+        //    mCamera.setPreviewTexture(/*surfaceTexture*/null);
+        /*} catch (IOException e) {
             Log.w(TAG, "Failed to clear prior SurfaceTexture, may cause GL deadlock: ", e);
         } catch (RuntimeException e) {
             Log.e(TAG, "Received device exception in configure call: ", e);
             mDeviceState.setError(
                     CameraDeviceImpl.CameraDeviceCallbacks.ERROR_CAMERA_DEVICE);
             return;
-        }
+        }*/
 
         if (mGLThreadManager != null) {
             mGLThreadManager.waitUntilStarted();
@@ -479,6 +479,20 @@ public class RequestThreadManager {
             Log.i(TAG, "configureOutputs - set take picture size to " + smallestSupportedJpegSize);
             mParams.setPictureSize(
                     smallestSupportedJpegSize.getWidth(), smallestSupportedJpegSize.getHeight());
+        }
+        
+        // TS: Make sure buffer orientation is correct.
+		if (outputs != null) {
+            for (Pair<Surface, Size> outPair : outputs) {
+                Surface s = outPair.first;
+                Size outSize = outPair.second;
+                try {
+                    int format = LegacyCameraDevice.detectSurfaceType(s);
+                    LegacyCameraDevice.setSurfaceOrientation(s, facing, orientation);
+                } catch (LegacyExceptionUtils.BufferQueueAbandonedException e) {
+                    Log.w(TAG, "Surface abandoned, skipping...", e);
+                }
+            }
         }
 
         // TODO: Detect and optimize single-output paths here to skip stream teeing.

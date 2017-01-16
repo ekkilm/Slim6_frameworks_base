@@ -102,7 +102,12 @@ public class GLThreadManager {
                         if (!mConfigured) {
                             Log.e(TAG, "Dropping frame, EGL context not configured!");
                         }
-                        mTextureRenderer.drawIntoSurfaces(mCaptureCollector);
+                        //mTextureRenderer.drawIntoSurfaces(mCaptureCollector);
+						try {
+                        	mTextureRenderer.drawIntoSurfaces(mCaptureCollector);
+						} catch (Exception e) {
+						    Log.e(TAG, "SKIP exception on GL render thread: ", e);
+						}
                         break;
                     case MSG_CLEANUP:
                         mTextureRenderer.cleanupEGLContext();
